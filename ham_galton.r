@@ -1,5 +1,5 @@
-install.packages("HistData")
-install.packages("dplyr")
+#install.packages("HistData")
+#install.packages("dplyr")
 library("HistData")
 library("dplyr")
 library("ggplot2")
@@ -82,4 +82,31 @@ View(by_family)
 by_family
 multiplot(p1, p2, p3, cols=3)
 
+#qplot(x, y, color, data, geom)
+
+qqnorm(df$midparentHeight)
+plt <- qqnorm(df$midparentHeight)
+twstd = 2 * sd(df$midparentHeight)
+dfmean = mean(df$midparentHeight)
+new = df$midparentHeight[(df$midparentHeight > (dfmean - twstd)) & (df$midparentHeight < (dfmean + twstd))]
+qqline(new)
+
+
+mutate(df, gender = as.numeric(gender == "female")) %>%
+  group_by(family) %>%
+  summarize(father = mean(father),
+            mother = mean(mother),
+            midparentHeight = mean(midparentHeight),
+            children = mean(children)) -> numericdf
+
+cor(numericdf[2:5])
+
+numericdf <- mutate(df, gender = as.numeric(gender == "female"))
+
+cor(numericdf[2:8]) %>%
+  mutate(father, replace(father, abs(father) > 0.2, NA),
+         mother, replace(mother, abs(mother) > 0.2, NA),
+         midparentHeight, replace(midparentHeight, abs(midparentHeight) > 0.2, NA),
+         father, replace(father, abs(father) > 0.2, NA),
+         ) 
 
