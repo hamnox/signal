@@ -99,3 +99,101 @@ is.vector(example)
 is.atomic(example)
 
 data.frame()
+
+
+# Subsetting in R
+# --------------------------------
+str(df)
+
+x = 1:5
+x[c(3, 1)] # == 3 and 1
+x[-c(3, 1)] # == 2, 4, 5 (exclude)
+x[c(-3, -1)] # == 2, 4, 5
+x[c(1,0,1,0,1)] # == 1 1 1
+x[c(3,3,3,3,4,4)]
+x[c(1.2, 2.99999999)] # truncates
+# mixed positive negative gets a :(
+
+x[c(TRUE, FALSE)]
+x[FALSE]
+
+x[c(1, NA, 5)] # NA just gives you NA back
+x[c("namey")] # return NA
+
+y = list("EVIL", "CON", "CARNE", subl=list(7, 8, 9), 10)
+y[TRUE]
+y["subl"] # get a list back of all the things
+unlist(y[2])
+
+df["5",c("X1", "X3")] # column if one vector
+# if you add a comma it becomes row, column
+df["5",] 
+typeof(df[,1])
+class(df[1])
+
+# Supplementary exercises
+# --------------------------------
+x = 1:5
+x[c(1,2)] = c(10,11)
+x
+
+x = 1:10
+x[c(FALSE, TRUE)] = c(100, 100, 10, 100, 100)
+x
+
+x = 1:5
+x[NA] # thinks its a logical
+x[c(FALSE, 9, TRUE)]
+
+str(mtcars)
+mtcars[1:20] # not enough columns
+mtcars[1:20,] # 20 rows
+
+df[3,4] = NA
+df[is.na(df)] = 0 # tests for NAs, takes out, assigns 0 to
+df
+
+
+x = c("a", "b", "a", "a", "b", "x", "b", "a")
+fruits = c(a="apple", b="banana", x=NA)
+fruits[x]
+
+colnames(df) = c("b", "q", "d", "z", "f", "a", "c", "e", "g", "h")
+
+order_columns = function(df) {
+  colname_order = order(colnames(df))
+  return(df[colname_order])
+}
+
+order_columns(df)
+
+# sample
+afunction = function(df, rows=FALSE) {
+  col_order = sample(1:(length(df)))
+  if (rows) {
+    row_order = sample(1:length(df[[1]]))
+    return(df[ row_order, col_order ])
+  }
+  return(df[col_order]) # random permutated columns
+}
+
+afunction(df, TRUE)
+
+afunction = function(df, k) {
+  col_order = sample(1:(length(df)), size=k, replace=TRUE)
+  return(df[col_order]) # random permutated columns
+}
+
+afunction(df, 1)
+
+afunction = function(df, m) {
+  i = sample(1:(length(df[[1]]) - m + 1), size=1)
+  return(df[i:(i+m-1),])
+}
+
+afunction(df, 3)
+
+# colname is a string, so need to wrap in vector length 1
+afunction = function(df, colname) {
+  return(df[colnames(df) != colname])
+}
