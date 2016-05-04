@@ -197,3 +197,160 @@ afunction(df, 3)
 afunction = function(df, colname) {
   return(df[colnames(df) != colname])
 }
+
+# Miscellaneous Problems in R
+# --------------------------------
+# lists
+
+nesting_depth = function (L) {
+#  print("206")
+  if (is.atomic(L)) {
+  #  print("208")
+    return(0)
+  }
+  top_yet = 1
+  if(length(L) != length(c(L))) {
+    for (sublist in L) {
+      print(paste("wtf: ", sublist))
+      sublevels = nesting_depth(sublist)
+      if ((sublevels + 1) > top_yet) {
+        top_yet = sublevels + 1
+      }
+    }
+  }
+  return(top_yet)
+}
+
+nesting_depth = function(L) {
+  if (is.atomic(L)) {
+    return(0)
+  } else {
+    return(1 + max(unlist(lapply(L, nesting_depth))))
+  }
+}
+
+one = list(1)
+nesting_depth(one)
+list(one, one)
+nesting_depth((list(list(one, one))))
+
+
+ndomino = function(n) {
+  result = lapply((1:n), function(x) { lapply((x:n), function(y) { return(list(x, y)) }) })
+  return(result)
+}
+
+View(ndomino(3))
+
+circle_dominoes = function(dominoes) {
+  len = length(dominoes)
+  if(len < 2) {
+    return(FALSE)
+  }
+  if (dominoes[[1]][[1]] != dominoes[[len]][[2]]) {
+    return(FALSE)
+  }
+  for (i in 2:len) {
+    if (dominoes[[i]][[1]] != dominoes[[i-1]][[2]]) {
+      return(FALSE)
+    }
+  }
+  return(TRUE)
+}
+
+domino = list(list(1,3), list(3, 6), list(6,1))
+str(domino)
+domino[[1]][[1]]
+circle_dominoes(domino)
+domino2 = list(list(1,3), list(3, 5), list(6,1))
+circle_dominoes(domino2)
+
+grepblah = function(df) {
+  ivec = rep(0,26)
+  names(ivec) = letters
+  chars = unlist(lapply(colnames(df), function(x) {strsplit(x, split="")}))
+    for (char in chars) {
+      ivec[char] = ivec[char] + 1
+    }
+  return(ivec)
+}
+grepblah(df)
+
+# gsub
+gsuuub <- function (df) {
+  cols = colnames(df)
+  for(i in 1:(length(cols))) {
+    cols[i] <- sapply(cols[i], function(string) {
+      return(paste(gsub(" ", ".", string), "_mod",sep="")) })
+  }
+  return(cols)
+}
+gsuuub(df)
+df
+
+# remove last 4, didn't do
+
+row_names = function(df) {
+  sep = c("_")
+  names(sep) = c("sep")
+  do.call(paste, c(as.list(rownames(df)), sep))
+}
+row_names(df)
+
+# spiral -- are you kidding me
+
+# divisibility properties
+longestrun = function(invective) {
+  # longest last run was = 1
+  # if current run, current length of that
+  
+  longest_last = 1
+  longest_char = invective[1]
+  last_char = invective[1]
+  cnt = 1
+  for( i in 2:length(invective) ) {
+    if( invective[i] == last_char ){
+      cnt = cnt + 1
+      if(cnt > longest_last) {
+        longest_last = cnt
+        longest_char = invective[i]
+      }
+    } else {
+      cnt = 1
+      last_char = invective[i]
+    }
+  }
+  return(rep(longest_char, longest_last))
+}
+longestrun(c(1, 2, 2, 2, rep(3,10)))
+# as.data.frame(rle(c(1, 2, 2, 2, rep(3,10))))
+
+memoized <- c(2, 3, 5)
+pm = function(primemaybe) {
+  root = round(sqrt(primemaybe))
+  maxmemo = max(memoized)
+  if (root <= maxmemo) {
+    for (factor in memoized) {
+      if (primemaybe %% factor == 0){
+        return(FALSE)
+      }
+      if (factor > root) {
+        break
+      }
+    }
+    return(TRUE)
+  }
+  for (factor in (maxmemo + 1):root) {
+    prime_fac = pm(factor)
+    if (prime_fac) {
+      memoized <<- c(memoized, factor)
+    }
+    if (primemaybe %% factor == 0){
+      return(FALSE)
+    }
+  }
+  return(TRUE)
+}
+pm(43)
+# max * min, next min, next min
+
