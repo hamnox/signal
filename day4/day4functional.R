@@ -61,6 +61,7 @@ output = vector("list", length = length(args))
 length(output)
 my_lapply(1:10, double)
 
+
 matrix(rnorm(100), nrow=10)
 
 sub_prev_col = function(df) {
@@ -93,3 +94,7 @@ addColNum(df)
 
 
 
+sum(vapply(1:100, function(x) { x^3 + 4 * x^2 }, 1))
+
+xs = seq(3, 6, 0.1)
+vapply(xs, function(x) {exp(x)*cos(x)}, 3.3)

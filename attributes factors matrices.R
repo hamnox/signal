@@ -132,9 +132,31 @@ NA_imputed = function(df){
        }
      return(df_mod)
    }
- binary_make_var(fac_df)
+binary_make_var(fac_df)
+
+binary_make_var2 = function(df) {
+  df_mod = df
+  for (col in df) {
+    n_levels = length(levels(col))
+    lvls = levels(col)[2:n_levels]
+    future_cols = rep(col, (n_levels-1))
+    created = vapply(lvls, form_binary_col, rep(col[1], (length(col))), old_col=col)
+    df_mod = cbind(df_mod, created)
+  }
+  return(df_mod)
+}
+
+binary_make_var2(data.frame(fac_df$cyl, fac_df$am))
+
+# this seems ok
+form_binary_col = function(lvl, old_col) {
+  return(as.integer(old_col == lvl))
+}
+levels(fac_df$cyl)
+typeof(form_binary_col("4", fac_df$cyl))
 
 fac_df = mtcars[1:10,]
+
 for (n in c("cyl", "am", "carb")) { 
   fac_df[[n]] = factor(fac_df[[n]])
 }
