@@ -112,6 +112,10 @@ hist(predictions$predictIQ - predictions$ppvt)
 # 3.5.a
 # Read the data into R, including the variable names (headers)
 beauty.data <- read.csv ("/home/derrick/signal/day4/beauty/ProfEvaltnsBeautyPublic.csv")
+
+n = names(beauty.data)
+beauty.data$huey = beauty.data$btystdave
+beauty.data = beauty.data[-grep("class|beauty|bty",n)]
 str(beauty.data)
 
 # Rename the two variables for convenience
@@ -138,3 +142,14 @@ summary(fit)
 # interaction term, additional predictors of the interaction terms
 fit = lm(eval ~ beauty*female + minority*female + age*female + nonenglish + onecredit)
 summary(fit)
+
+# stepwise
+
+library(dplyr)
+names(beauty.data)
+head(beauty.data)
+
+min.model = lm(courseevaluation ~ 1, beauty.data)
+biggest = formula(lm(courseevaluation~.-profevaluation,beauty.data))
+model = step(min.model, direction='forward', scope=biggest)
+model
