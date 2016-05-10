@@ -46,6 +46,17 @@ estimateSlopes = function(a, n, numTrials = 500) {
   return(results)
 }
 
+# estimateSlopes Redo Week 2 with FUNCTIONAL PROGRAMMING!
+# estimateSlopes = function(a, n, numTrials = 500) {
+#   vapply(1:numTrials, function(a, n) {
+#     df = getSamples(a, n)
+#     return (coef(lm, y~ x, df)["x"])
+#   }, 0, n=n)
+# }
+# NEVERMIND!
+
+estimateSlopes(0.8, 1000, numTrials=500)
+
 # As n increases, we start getting a more normal distribution
 someestimates = data.frame(x=estimateSlopes(0.8,1000,numTrials=3000))
 ggplot(someestimates, aes(x)) + geom_histogram(binwidth=.005)
@@ -58,6 +69,7 @@ sd(estimateSlopes(0.1, 100))
 dfSD = data.frame()
 
 std_devs = c()
+
 for (slope in slopes) {
   for (num in sample_sizes) {
     slope_sd = sd(estimateSlopes(slope, num))
@@ -276,21 +288,28 @@ for (n in c("cyl", "am","carb")) {
   df[[n]] = factor(df[[n]])
 }
 
-createIndicators = function(df) {
-  for (colName in colnames(df)) {
-    columnvalues = df[[colName]]
-    if(is.factor(columnvalues)) {
-        levelopts = levels(columnvalues[1])
-        for(lvl in levelopts[2:length(levelopts)]) {
-        #for(lvl in levelopts) {
-          newcolumn = as.integer(columnvalues == lvl)
-          df[paste(colName,"_",lvl, sep="")] = newcolumn
-        }
-    }
-  }
-  return( df)
-}
+# createIndicators = function(df) {
+#   for (colName in colnames(df)) {
+#     columnvalues = df[[colName]]
+#     if(is.factor(columnvalues)) {
+#         levelopts = levels(columnvalues[1])
+#         for(lvl in levelopts[2:length(levelopts)]) {
+#         #for(lvl in levelopts) {
+#           newcolumn = as.integer(columnvalues == lvl)
+#           df[paste(colName,"_",lvl, sep="")] = newcolumn
+#         }
+#     }
+#   }
+#   return( df)
+# }
 
+createIndicators = function(df) {
+  factorcols = sapply(df, is.factor)
+  lapply(df[factorcols], function(col) {
+    as.list(levels(col))
+    newcolumn = as.integer(unlist(col) == levels())
+  })
+}
 str(createIndicators(df))
 
 # load()
