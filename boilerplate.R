@@ -46,6 +46,10 @@ library("GGally")
 
 # get residuals, plot residuals
 
+# take a long df and make it tall
+# rows are like ids, columns are like factors, all of the points go on same scale
+# so you can plot (x = rownum, y = all the column vals, color by which columns)
+
 # --------------------------------------------------------------------
 # --------------------------------------------------------------------
 # --------------------------------------------------------------------
