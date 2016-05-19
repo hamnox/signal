@@ -2,7 +2,7 @@ library(psych)
 library(dplyr)
 library(ggplot2)
 library(readr)
-setwd('C:/Users/Andrew/Documents/Signal/okcupid')
+setwd('datasets/okcupid')
 df = readRDS('parsed_data.rds')
 
 set.seed(1)
