@@ -129,6 +129,10 @@ coefs = coefs[rows_keep, ]
 # corrplot() !!!
 corrplot(coefs, method="circle", is.corr=FALSE, cl.pos="n")
 
+
+pcrcom
+
+
 ### PROBABILITY QUESTIONS ######################################################
 
 # Hashmap collision
@@ -191,6 +195,13 @@ next_gen = function(n) {
   }
 }
 
+# playing with PCA
+p = prcomp(scale(features), scale=TRUE)
+length(p$sdev) # == 75
+
+qplot(1:75, p$sdev, ylab = "standard deviations")
+
+#===========================
 n_lineages = 10000
 n_gens = 30
 pop = matrix(numeric(n_lineages * (n_gens + 1)), ncol=n_lineages)

@@ -1,5 +1,6 @@
 ---
 title: "pca"
+runtime: shiny
 output: html_document
 ---
 
@@ -198,3 +199,8 @@ corrplot(as.matrix(career_coefficients), is.corr=FALSE)
 
 ```
 
+## Step-wise regression
+
+```{r}
+step()
+```

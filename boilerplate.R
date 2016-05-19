@@ -29,26 +29,6 @@ library("GGally")
   #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 })
 
-# WISHLIST
-#---------
-# give a grouping var to map out coefficient differences
-    # year_coefficients = lapply(unique(support_df$year), function(votingyear) {
-    #   print(paste("year", votingyear))
-    #   year_df = filter(support_df, year == votingyear)
-    #   for (name in names(year_df)) {
-    #     if (length(unique(year_df[[name]])) < 2) {
-    #       year_df = year_df[-match(name, names(year_df))]
-    #     }
-    #   }
-
-# fancy report with grid.arrange
-# write fn to print a named vector transposed.
-
-# get residuals, plot residuals
-
-# take a long df and make it tall
-# rows are like ids, columns are like factors, all of the points go on same scale
-# so you can plot (x = rownum, y = all the column vals, color by which columns)
 
 # --------------------------------------------------------------------
 # --------------------------------------------------------------------

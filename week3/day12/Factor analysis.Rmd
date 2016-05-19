@@ -1,0 +1,311 @@
+---
+title: "Week3Day2 Factors"
+author: "Dave and Mel"
+date: "May 17, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+```
+
+## Factor Analysis
+
+find corrplot snippets
+
+Decide on approaches and tools
+
+
+```{r cars}
+library("corrplot")
+library("ggplot2")
+library("psych")
+library("GPArotation")
+library("Rmisc")
+library("dplyr")
+```
+
+## PCA
+
+use rnorm for 3 data frames
+play with random data frames generated from rnorm
+
+write function noisyindicators
+ - note variable(i) = a1F1 + a2F2 + .... + akFk + error(i)
+ - resolve confusion
+
+make dataframe noisies
+
+run PCA
+
+Plot PCA versus noisies and compare to pca vs. factors
+
+```{r PCA}
+
+set.seed(1)
+factors = data.frame(matrix(rnorm(300) , ncol = 3, nrow = 100))
+names(factors) = c('X','Y','Z')
+
+# y = a*x + error
+# 
+
+noisyIndicators = function(feature, name, k, correlation){
+  
+  result = vector(mode="list", k)
+  for(i in 1:k) {
+    error = rnorm(length(feature))
+    proxy = correlation * feature + error
+    result[[i]] = proxy
+  }
+  names(result) = paste(name, 1:k, sep="_")
+  return(as.data.frame(result))
+}
+
+# 4 noisy proxies to X
+# 3 noisy proxies to Y
+noisies = cbind(noisyIndicators(factors$X, "X", 4, .9),
+               noisyIndicators(factors$Y, "Y", 3, -.5))
+
+# plot out the correlation between the true vars and proxies 
+corrplot( cor(factors, noisies), cl.pos="n")
+
+pca = prcomp(factors)
+plot(pca$sdev)
+
+# the pcas are still correlated with noisy Xs and noisy Ys,
+# but less so, or in the opposite direction if noisies corr is negative
+corrplot(pca$rotation)
+corrplot(cor(pca$x,noisies))
+
+noisy_pca = prcomp(noisies)
+
+corrplot(noisy_pca$rotation, title = "Noisy PCA rotations")
+
+#PC 1 of factors disappeared in the noisies... because it was correlated with Z
+#PC 2 and 3 still there. PC2 is weaker, it correlate with Y which has a weakercorrelation with noisies
+
+corrplot(cor(noisy_pca$x, pca$x), title="Noisy PCA vs. Factor PCA")
+
+faa = fa(noisies, nfactors = 2, rotate="varimax")
+
+# factor one correspond to Xs, factor two to Ys but more noisily
+corrplot(faa$loadings)
+
+# correlation between guessed factors and real factors
+corrplot(cor(faa$scores, factors))
+
+```
+
+## Factor Analysis
+
+Look at Drunkard's walk
+
+get correlation on modeled factors and true factors
+
+50 variables:
+  X*runif(1) + Y*runif(2) + Z*runif(3) + 0.5*error
+    - error normally distributed with SD 1
+
+PCA on generated variables
+
+plot 3 principal compenents vs XYZ correlation
+
+factor analysis with k= 3 and rotate = 'varimax'
+
+corr(modeled factors, true factors
+
+```{r}
+library(psych)
+
+df = data.frame()
+
+#initialize a holder for the 50 variables
+varholder = vector('list',50L)
+
+#populate
+for (col in 1:50) {
+  var = (factors$X * runif(1) + 
+         factors$Y * runif(1) + 
+         factors$Y * runif(1) + 
+         factors$Z * runif(1) + 
+         factors$Z * runif(1) + 
+         factors$Z * runif(1) + 
+         0.5 * rnorm(100))
+  varholder[[col]] = var
+}
+
+df = as.data.frame(varholder)
+names(df) = paste('var', 1:50, sep="")
+
+pcafifty = prcomp(df, scale. = TRUE)
+plot(pcafifty$sdev, xlab = 'a', ylab = 'b')
+
+# rotations
+corrplot(pcafifty$rotation[,1:3], is.corr=FALSE)
+
+
+
+```
+
+Factor Z is the first principal component. It's against 3 random numers, so it's an axis
+with lots of variation available based on it.
+
+```{r}
+corrplot(cor(pcafifty$x[,1:4], factors))
+
+
+fafifty = fa(df, nfactors = 3, rotate="varimax")
+
+corrplot(cor(fafifty$scores, factors))
+
+
+
+```
+## Oblique factor analysis
+
+W = 0.5*X + Y
+
+corr(W, Y)
+
+noisyIndicators(10 indicators from X)
+  noisy(4 with W)
+  correlations = .8 in both
+  
+corr(noisyW, noisyX) ? not clear on instructions
+
+fa(nfactors = 2, rotate = "varimax")
+fa(nfac=2, rotate = "oblimin")
+
+? construct tall dataframe to plot?
+
+how would you compare the correlations?
+results with noisy indicators
+results with true factors
+either of those dependent on style of rotation
+
+```{r oblique}
+
+W = 0.5*factors$X + factors$Y
+
+cor(W,factors$Y)
+
+noiOblique = cbind(noisyIndicators(factors$X, "X", 10, .8),
+               noisyIndicators(W, "W", 4, .8))
+
+xandw = matrix(c(W,factors$X), ncol = 2)
+
+corrplot(cor(noiOblique,xandw))
+
+# test out oblique factor analysis
+
+varmax = fa(noiOblique, nfactors = 2, rotate="varimax")
+oblim = fa(noiOblique, nfactors = 2, rotate="oblimin")
+
+colnames(oblim$loadings) = c("oblim_MR1", "oblim_MR2")
+vandoblim = cbind(varmax$loadings, oblim$loadings)
+
+corrplot(vandoblim, is.corr=FALSE, cl.pos = "n" )
+
+```
+
+### Speed dating data
+
+clean up speed data frame
+
+```{r speed dating}
+speed_df = read.csv("speeddating-aggregated.csv")
+
+features = select(speed_df, sports:yoga)
+
+```
+loop over 1,2,3,4 nfactor
+  Do factor analysis on activities w/varimax
+  do with oblimin
+
+look at what those results are like, figure out how to get on
+  one or two corrplots
+
+corrplot factor loadings
+
+
+```{r plot factor loadings, eval=FALSE, include=FALSE}
+cache = list(varimax = vector("list", 4),
+             oblimin = vector("list", 4))
+
+for (i in 1:4) {
+  cache$varimax[[i]] = fa(features, nfactors=i, rotate="varimax")
+  cache$oblimin[[i]] = fa(features, nfactors=i, rotate="oblimin")
+}
+
+
+vdf = as.data.frame(matrix(0, nrow=ncol(features), ncol=sum(1:4)))
+odf = as.data.frame(matrix(0, nrow=ncol(features), ncol=sum(1:4)))
+coln = 1
+for (i in 1:4) {
+  for (j in 1:i) {
+    vdf[[coln]] = cache$varimax[[i]]$loadings[,j]
+    odf[[coln]] = cache$oblimin[[i]]$loadings[,j]
+    colnames(vdf)[coln] = paste("vrmax",i,"MR",j,sep="")
+    colnames(odf)[coln] = paste("oblim",i,"MR",j,sep="")
+    coln = coln + 1
+  }
+}
+rownames(vdf) = colnames(features)
+rownames(odf) = colnames(features)
+corrplot(as.matrix(vdf), is.corr=FALSE, cl.pos="n")
+corrplot(as.matrix(odf), is.corr=FALSE, cl.pos="n")
+
+
+```
+#### Varimax
+
+*First component* with vdf is invariable about museums, art, and theatre.
+*Second component* is kind of tv, sports, gaming the first run it goes on, but decoheres after.
+
+#### Oblimin
+
+*First component* is the same
+*Second component* is kinda spread thing when it first comes up, gets a bit more concentrated on the third around tv through shoppping, but then on the fourth becomes clearly about concerts and music.
+*Third component* is clearly sports/tv/exercise
+
+```{r continued oblique factors}
+corrplot(cor(vdf, odf))
+
+# the two types of component analysis correspond really well to their counterparts, up till 3 and 4 which look switched.
+
+
+```
+### Big Five personality data
+
+downlaod big5 dataset
+
+explore
+clean 
+
+restrict to 50 questions?
+get gender as target
+
+PCA on 50 questions
+factor analysis n=5 on 50 questions
+
+what is compare results?
+interpret both loadings?
+
+corrplot features against rotations
+corrplot features against loadngs
+corrplot rotations against loadings
+
+glm(family=binomal) predict gender on 5 factors
+glm(family=binomal) predict gender on 50 qs
+display coefficients (corr first, filter then corr second)
+? discuss differences, write notes
+
+ask about 10 questions for each trait I don't get this
+mark which question to each trait with dummies
+train on trait# factors, look at corr between $x thing and actual traits
+
+ OH! split into trait# of datasets, train 1 factor on each
+ look up subfactors of each trait
+ factoranalysis those numbers and look at loadings to see if questions make sense
