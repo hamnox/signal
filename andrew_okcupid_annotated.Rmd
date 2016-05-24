@@ -1,0 +1,624 @@
+---
+title: "OKCupid Analysis Annotated"
+author: "Code Andrew, Comments Melanie Heisey"
+date: "May 19, 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+## What can I learn from Andrew's OKCupid Analysis?
+2016-05-19 through MM-DD
+
+Given Instructions: **"Explore the data with a focus on using factor analysis. Pick a particular result that you like, explore it in greater depth, and begin to prepare a writeup."**
+
+I want to train my intuition for what the properties of data *mean* and *look like*. I want to identify the scope and limitations of data manipulation/interpretation tools, and put useful ones in easy mental reach.
+
+#### method
+Check: Do I have a full running copy
+
+Skim once, with a stopwatch click on each section.
+- Do I have a full running copy?
+- Mark points of confusion on completed code (with @)
+- count separate demonstrative points I can identify (!)
+- count unique transformations (~)
+- count repeated tranformations (*)
+
+Run through again, with a stopwatch click on each section.
+<!-- redacted
+- count number of errors -->
+- count number of lookup pages
+- count number of comments added (+)
+- count number of multiline delete/rewrites
+
+#### resources
+- phone stopwatch
+- notebook
+- rmarkdown
+- git
+
+
+### code
+<!-- 0:15 -->
+<!-- 1:00 rewrite -->
+```{r init}
+library("psych")
+library("dplyr")
+library("ggplot2")
+library("readr")
+library("corrplot")
+library("tidyr")
+
+#+ Load User Data
+df = readRDS('datasets/okcupid/parsed_data.rds')
+#+ Load Questions Data
+qdata = read_delim('datasets/okcupid/question_data.csv', ';')
+#+ Fix NA column name
+names(qdata)[1] = "id"
+
+set.seed(42)
+```
+
+
+*things I want to know...*
+- preferences of people who are looking for women partners/friends
+- general conduct expectations of groups I like... High income, same age group, career,
+
+
+```{r helper functions}
+my_dummy = function(factor_v, prefix="") {
+  results = matrix(NA_integer_, nrow = length(factor_v), ncol=length(levels(factor_v))-1)
+  for (i in seq(levels(factor_v)[-2])) {
+    results[,i] = as.numeric(factor_v == levels(factor_v)[i])
+  }
+  colnames(results) = paste(prefix, levels(factor_v)[-2], sep="")
+  return(results)
+}
+
+give_me_dummies = function(df, factcols = NULL) {
+  if (!is.null(factcols)) {
+    newcols = lapply(factcols, function(col) {
+      dummies = my_dummy(df[[col]], paste(col, ".", sep=""))
+    })
+    newcols = do.call(cbind.data.frame, newcols)
+    df = select(df, -one_of(factcols)) %>% cbind.data.frame(newcols)
+  }
+  return(df)
+}
+```
+<!-- 2:45 -->
+<!-- 2 hours -->
+```{r cleanup columns}
+
+# explore variables
+# I'm not interested in questions right now, suspect p is precalculated FROM this data
+df_vars = select(df, -starts_with("q"))[1,]
+df_vars = names(select(df_vars, -starts_with("p_")))
+df_vars = sort(df_vars)
+
+silenced = sapply(df_vars, print)
+# "d_age"
+# "d_gender"
+# "d_income"
+# "d_job"
+# "gender"
+# "lf_for"
+# "lf_want"
+
+# look at splits by gender, splits by age
+explore_data = function(df) {
+  ggplot(df) + geom_density(aes(x=d_age))
+  # sqrt() to get rid of right skew
+  qqnorm(y=sqrt(df$d_age))
+  qqline(y=sqrt(df$d_age)) # I think cut off at 50
+  qqnorm(y=sqrt(df$d_age)[df$d_age<=50])
+  qqline(y=sqrt(df$d_age)[df$d_age<=50])
+  incometable = as.data.frame(table(df$d_income))
+  incometable = incometable[c(12,3,5,6,7,9,10,11,1,2,4,8,13,14),]
+  incometable$order = LETTERS[1:14]
+  ggplot(incometable) + geom_bar(aes(x=order, y=Freq),stat="identity")
+
+  # grab preference questions... only 346 preference questions with binary answers
+
+  sapply(filter(qdata, grepl(".*preference.*", Keywords)), function(col) sum(is.na(col)))
+  sapply(filter(qdata, grepl(".*preference.*", Keywords)), function(col) sum(!is.na(col)))
+}
+
+# will want to dummy into Cool_Career, OK_Career, Sucky_Career
+table(df$d_job)
+# will want to dummy into Poor <30k, Rich > 100k
+table(df$d_income)
+# will want to dummy into like women, like men. Everybody having 1 in both
+table(df$lf_want)
+# will want to dummy into friends, dating, and sex
+table(df$lf_for)
+
+# frac_good = function(column) {
+#   things = strsplit(column, "; ")
+#   results = vector("numeric", length(column))
+#   for (i in seq_len(length(column))) {
+#     results[i] = sum(things[[i]] %in% "preference" +
+#          things[[i]] %in% "opinion" +
+#          things[[i]] %in% "descriptive") / length(things[[i]])
+#   }
+#   return (results)
+# }
+
+basedf = select(df, one_of("d_job", "d_income", "lf_want", "lf_for", "gender"), starts_with("q"))
+
+# filter out all the questions I don't care about
+relevant_qs = filter(qdata, grepl(".*descriptive.*", Keywords))
+relevant_qs = filter(relevant_qs, id %in% colnames(basedf))
+
+
+
+length(names(basedf))
+# remove particular columns
+for (name in names(basedf)) {
+  if (substr(name, 1, 1) == "q") {
+    if (!(name %in% c(relevant_qs$id, "d_job", "d_income", "lf_want", "lf_for", "gender"))) {
+      # print(paste("remove", name))
+      basedf[[name]] = NULL
+    }
+  }
+}
+
+length(names(basedf))
+
+for (name in names(basedf)) {
+  # filter for questions with proportion of NAs > 0.90
+  if (sum(is.na(basedf[[name]]))/nrow(basedf) > 0.90) {
+    # print(paste(name, ":", sum(is.na(basedf[[name]])),"/", nrow(basedf), "NA: "))
+    basedf[[name]] = NULL
+  }
+}
+
+length(names(basedf))
+# removing nonbinary because evaluating would be hard otherwise
+to_dummy = c()
+for (name in names(basedf)) {
+  if (substr(name, 1, 1) == "q") {
+    # print(name)
+    if (length(levels(basedf[[name]])) > 2) {
+      # if it's nomative type, do a dummy variable instead
+      if(is.na(relevant_qs$Type[match(name, relevant_qs$id)])) {
+        print(paste("invalid type on", name))
+        basedf[[name]] = NULL
+        next
+      }
+      if (relevant_qs$Type[relevant_qs$id == name] == "N") {
+        # print(paste("will dummy", name))
+        to_dummy = c(to_dummy, name)
+      } else {
+        basedf[[name]] = NULL
+      }
+    } else {
+      if (length(levels(basedf[[name]])) > 1) {
+        to_dummy = c(to_dummy, name)
+      } else {
+        print(paste("single factor column", name))
+        basedf[[name]] = NULL
+      }
+    }
+  }
+}
+length(names(basedf))
+```
+
+```{r dummying}
+basedf$career_cool = grepl("Science|Technology|Medicine|Education", basedf$d_job)
+# will want to dummy into Poor and Rich
+basedf$n_income = NA
+basedf$n_income[basedf$d_income == "$20,000-$30,000"] = 25000
+basedf$n_income[basedf$d_income == "$30,000-$40,000"] = 35000
+basedf$n_income[basedf$d_income == "$40,000-$50,000"] = 45000
+basedf$n_income[basedf$d_income == "$50,000-$60,000"] = 55000
+basedf$n_income[basedf$d_income == "$60,000-$70,000"] = 65000
+basedf$n_income[basedf$d_income == "$70,000-$80,000"] = 75000
+basedf$n_income[basedf$d_income == "$80,000-$100,000"] =  90000
+basedf$n_income[basedf$d_income == "$100,000-$150,000"] = 125000
+basedf$n_income[basedf$d_income == "$150,000-$250,000"] = 200000
+# differences getting large enough that I'm going about the geometric mean instead
+basedf$n_income[basedf$d_income == "$250,000-$500,000"] = 350000
+basedf$n_income[basedf$d_income == "$500,000-$1,000,000"] = 700000
+basedf$n_income[basedf$d_income == "More than $1,000,000"] = 1000000
+basedf$income_private = as.numeric(basedf$d_income == "Rather not say")
+
+
+
+# we hit the first irregular bump around n_income = 10^2 * 1000 = 100,000.
+ggplot(basedf) + geom_density(aes(x=sqrt(n_income/1000)), alpha=0.3)
+
+# mean median hover around 40k
+ggplot(filter(basedf, n_income < 90000), aes(color=gender)) + geom_density(aes(x=n_income) ,alpha=0.3) + geom_vline(aes(xintercept = mean(n_income), na.rm=TRUE)) + geom_vline(aes(xintercept = median(n_income), na.rm=TRUE))
+
+# add categorical variables
+basedf$rich = as.numeric(basedf$n_income >= 90000)
+basedf$low_income = as.numeric(basedf$n_income > 40000)
+
+basedf[["n_income"]] = NULL
+basedf[["d_income"]] = NULL
+
+basedf$like_women = as.numeric(grepl("women|Every", basedf$lf_want))
+basedf$like_women[is.na(basedf$lf_want)] = NA_integer_
+basedf$like_men = as.numeric(grepl("men|Every", basedf$lf_want))
+basedf$like_men[is.na(basedf$lf_want)] = NA_integer_
+
+basedf[["lf_want"]] = NULL
+
+# will want to dummy into friends, dating, and sex
+table(df$lf_for)
+
+basedf$friends = as.numeric(grepl("friends", basedf$lf_for))
+basedf$friends[is.na(basedf$lf_for)] = NA_integer_
+basedf$dating = as.numeric(grepl("dating", basedf$lf_for))
+basedf$dating[is.na(basedf$lf_for)] = NA_integer_
+basedf$casualsex = as.numeric(grepl("sex", basedf$lf_for))
+basedf$casualsex[is.na(basedf$lf_for)] = NA_integer_
+
+basedf[["lf_for"]] = NULL
+
+basedf$male = as.numeric(grepl("Man", basedf$gender))
+basedf$male[is.na(basedf$gender)] = NA_integer_
+
+basedf$other_gender = as.numeric(grepl("Other", basedf$gender))
+basedf$other_gender[is.na(basedf$gender)] = NA_integer_
+
+basedf[["gender"]] = NULL
+
+# dummy nomative variables
+length(names(basedf))
+basedf = give_me_dummies(basedf,to_dummy)
+length(names(basedf))
+
+```
+
+<!-- 1:24 -->
+```{r subset}
+
+
+# Coerce factors to numerics
+# for (i in 1:length(basedf)) {
+#   if (is.factor(basedf[[i]])) {
+#     names(basedf)[[i]] = paste(names(basedf)[[i]], sep=".")
+#     print(paste("unfactorized column", names(basedf)[i]))
+#     basedf[[i]] = as.numeric(basedf[[i]]) - 1
+#   }
+# }
+
+#~~
+#*
+# Generate data frames for Male/Female
+nrow(basedf) # 68371
+dfset_all = basedf[basedf$male %in% c(1, 0),]
+dfset_m = basedf[basedf$male == 1,]
+dfset_f = basedf[basedf$male == 0,]
+#dfset_o = basedf[basedf$other_gender == 1,]
+
+nrow(dfset_all) # 66365
+nrow(dfset_m) # 42221
+nrow(dfset_f) # 28156
+#nrow(dfset_o) # 2204
+
+# verifying these look accurate
+rownames(dfset_f)[1:15]
+rownames(dfset_m)[1:15]
+#rownames(dfset_o)[1:15]
+```
+
+<!-- 2:47 -->
+```{r filter NA, eval=FALSE, include=FALSE}
+# Filter each one for proportion of NAs in column > 0.90
+# prop_na = function(c, t=0.90) sum(is.na(c)) / length(c) > t
+# sd_zero = function(c) sd(c, na.rm=TRUE) < 0.01
+# 
+# names_rm = union(names(dfset_m)[sapply(dfset_m, prop_na)], names(dfset_f)[sapply(dfset_f, prop_na)])
+# 
+# 
+# dfset_all = select(dfset_all, -one_of(names_rm))
+# dfset_m = select(dfset_m, -one_of(names_rm))
+# dfset_f = select(dfset_f, -one_of(names_rm))
+```
+
+<!-- 1:58 + 22:54 -->
+```{r correlations}
+# ~**
+
+df_qs_all = select(dfset_all, starts_with("q"))
+df_qs_f = select(dfset_f, starts_with("q"))
+df_qs_m = select(dfset_m, starts_with("q"))
+
+reload=TRUE
+
+# Get correlations
+if (file.exists("all_correlations.RData") & !reload) {
+  print("loading previous correlation data")
+  load("all_correlations.RData")
+} else {
+  c_all = cor(df_qs_all, use="pairwise.complete.obs")
+  save("c_all", file="all_correlations.RData")
+}
+
+# 
+if (file.exists("fm_correlations.RData") & !reload) {
+  print("loading previous female and male correlation data")
+  load("fm_correlations.RData")
+} else {
+  c_male = cor(df_qs_m, use="pairwise.complete.obs")
+  c_female = cor(df_qs_f, use="pairwise.complete.obs")
+
+
+  # Look at which female correlations are NA
+  tmp_1 = (1:ncol(c_female))[sapply(as.data.frame(c_female), function(c) sum(is.na(c)) > 0)]
+  #@
+  tmp_2 = sapply(tmp_1, function(c) (1:nrow(c_female))[is.na(c_female[, c])])
+
+  #~
+  # Replace them all with 0
+  c_female[is.na(c_female)] = 0
+
+  save("c_male", "c_female", file="fm_correlations.RData")
+}
+
+# We'll want to correlate the results with the various question factors
+```
+
+<!-- 1:48 -->
+```{r eigenvalues}
+
+
+# Eigenvalues
+if (file.exists("eigen.RData") & !reload) {
+  print("loading previous eigenvalues")
+  load("eigen.RData")
+} else {
+  eig_all = eigen(c_all)
+  eig_male = eigen(c_male)
+  eig_female = eigen(c_female)
+  save("eig_all", "eig_male", "eig_female", file="eigen.RData")
+}
+
+# Plot eigenvalues (scree plot)
+qplot(1:50, eig_all$values[order(abs(eig_all$values), decreasing=TRUE)][1:50])
+qplot(1:50, eig_male$values[order(abs(eig_male$values), decreasing=TRUE)][1:50])
+qplot(1:50, eig_female$values[order(abs(eig_female$values), decreasing=TRUE)][1:50])
+
+# All is up till 8, maybe 12-14
+# Male is up till 11, maybe 9
+# Female is up till 8
+```
+
+<!-- 5:14 -->
+```{r factors}
+
+# Factor analysis on correlation matrix
+n_fact_all = 8
+n_fact_male = 9
+n_fact_female = 8
+
+
+if (file.exists("fa_cor.RData") & !reload) {
+  print("loading previous factor analysis on correlation matrices")
+  load("fa_cor.RData")
+} else {
+  fa_cor_all = fa(c_all, n_fact_all, rotate="oblimin", covar=TRUE)
+  fa_cor_male = fa(c_male, n_fact_male, rotate="oblimin", covar=TRUE)
+  fa_cor_female = fa(c_female, n_fact_female, rotate="oblimin", covar=TRUE)
+  save("fa_cor_all", "fa_cor_male", "fa_cor_female", file="fa_cor.RData")
+}
+
+if (file.exists("fa_cor.RData") & !reload) {
+  print("loading previous factor analysis on correlation matrices")
+  load("fa_cor.RData")
+} else {
+  pca_cor_all = fa(c_all, n_fact_all, rotate="oblimin", fm="pa", covar=TRUE)
+  pca_cor_male = fa(c_male, n_fact_male, rotate="oblimin", fm="pa", covar=TRUE)
+  pca_cor_female = fa(c_female, n_fact_female, rotate="oblimin", fm="pa", covar=TRUE)
+  save("pca_cor_all", "pca_cor_male", "pca_cor_female", file="pca_cor.RData")
+}
+```
+
+<!-- 9:00 + half hour probably rewriting -->
+```{r interpret factors}
+# Turn loadings into dataframes
+load_all = as.data.frame(fa_cor_all$loadings[, 1:n_fact_all])
+load_male = as.data.frame(fa_cor_male$loadings[, 1:n_fact_male])
+load_female = as.data.frame(fa_cor_female$loadings[, 1:n_fact_female])
+
+# function to get Top Questions corresponding to 
+getTopQuestions = function(column, qidnames, n_qs = 20) {
+  # cut off dummy variable disambiguation
+  propernames = sapply(qidnames, function(q) strsplit(q, "[.]")[[1]][[1]])
+  
+  # get indices of the highest absolute value coefficients from loading
+  order_i = order(abs(column), decreasing=TRUE)[1:n_qs]
+
+  # get qdata row indices corresponding to the feature
+  qindices = match(propernames[order_i], qdata$id)
+
+  # save actual values of PCA/Feature correlation
+  values = round(column[order_i], 3)
+
+  # mention original column name and actual value of PCA/Feature correlation
+  results = matrix(qdata$text[qindices])
+  rownames(results) = paste(qidnames[order_i], values)
+  
+  return(results)
+}
+
+# Look at questions associated with each factor
+
+fact_all = lapply(seq(load_all), function(i) getTopQuestions(load_all[[i]], rownames(load_all)))
+names(fact_all) = colnames(load_all)
+
+fact_male = lapply(seq(load_male), function(i) getTopQuestions(load_male[[i]], rownames(load_male)))
+names(fact_male) = colnames(load_male)
+
+fact_female = lapply(seq(load_female), function(i) getTopQuestions(load_female[[i]], rownames(load_female), 10))
+names(fact_female) = colnames(load_female)
+
+# all factors with fm="pa"
+# PC1 = well-read, sophisticated (anti)
+# PC3 = social normality
+# PC2 = exclusivity
+# PC6 = religiousity
+# PC5 = anti-borderer
+# PC8 = easy going
+# PC4 = manliness
+fact_all
+# all factors
+# MR1 seems anti-wellread, anti-sophisticated
+# MR5 exclusivity/prudishness
+# MR2 practicality
+# MR3 overthinker
+# MR7 stability-seeking
+# MR4 nonreligiousity
+# MR6 unAmerican
+# MR8 not knowledge seeking
+
+fact_male
+# male factors
+# MR4 ME AM MAN
+# MR7 emotional connection?
+# MR6 intelligence
+# MR5? presentability?
+# MR8 Non-American/Borderer
+# MR9 relationship compromise (anti)
+# MR2 seriously Non-American
+
+fact_female
+# female factors
+# MR8 anti-cultured
+# MR2 partner discerning
+# MR3 anti-casual sex
+# MR1 religiousity
+# MR7 stability-seeking
+# MR5 non-borderer
+# MR4 Logical
+# MR6 not knowledge-seeking?
+
+#REDO: MR1 = artist, MR3 = sexy and I know it, MR7 = techy
+# MR5 = not jealous, MR8 = slutty, MR2 = sporty/butch, MR4 = Gun Happy
+# MR6 = guardedness
+
+# imputed_m = df_qs_m
+# for (n in names(imputed_m)) {
+#   #imputed_all[[n]][is.na(imputed_all[[n]])] = mean(imputed_all[[n]], na.rm=TRUE)
+#   imputed_m[[n]][is.na(imputed_m[[n]])] = mean(imputed_m[[n]], na.rm=TRUE)
+#   #imputed_f[[n]][is.na(imputed_f[[n]])] = mean(imputed_f[[n]], na.rm=TRUE)
+# }
+# silenced = as.matrix(imputed_m) %*% as.matrix(load_male)[, 1:n_fact_male]
+
+```
+
+<!-- 14:24 --
+
+#~
+# Define function to get top 10 loadings given load_* and col #
+top_load = function(loadings, col) loadings[order(abs(loadings[[col]]), decreasing=TRUE), col][1:10]
+
+#!
+#@
+# Fix signs of factors
+switch_male = c()
+switch_female = c()
+load_male[, switch_male] = -load_male[, switch_male]
+load_female[, switch_female] = -load_female[, switch_female]
+
+# Set factor names for columns
+# !
+# ~*
+fact_names_male = c("sex_driven", "Christian", "spiritual",
+                    "artistic", "hateful", "independent",
+                    "tolerates_problems", "transactional",
+                    "extroverted", "kinky", "technical",
+                    "nerdy", "govt_ok", "celibate_ok",
+                    "pacifist", "vulgar",
+                    "foreign", "other")
+# @
+fact_names_female = c("sex_driven", "sophisticated",
+                      "transactional", "spiritual", "celibate_ok",
+                      "tolerates_problems", "Christian",
+                      "pacifist", "other")
+colnames(load_male) = fact_names_male
+colnames(load_female) = fact_names_female
+```
+
+<!-- 16:00 --
+
+#!
+#~
+# Fill in the data with column means
+imputed_all = df_qs_all
+imputed_m = df_qs_m
+imputed_f = df_qs_f
+for (n in names(imputed_m)) {
+  #imputed_all[[n]][is.na(imputed_all[[n]])] = mean(imputed_all[[n]], na.rm=TRUE)
+  imputed_m[[n]][is.na(imputed_m[[n]])] = mean(imputed_m[[n]], na.rm=TRUE)
+  #imputed_f[[n]][is.na(imputed_f[[n]])] = mean(imputed_f[[n]], na.rm=TRUE)
+}
+
+# Calculate factor scores for imputed
+#@
+#~
+#!
+scores_m = as.matrix(imputed_m) %*% as.matrix(load_male)[, 1:16]
+#~
+colnames(scores_m) = fact_names_male[1:16]
+#*
+fa_imp_m = fa(cor(scores_m), 5, rotate="oblimin", fm="pa", covar=TRUE)
+#@
+#~
+#!
+corrplot(fa_imp_m$loadings, is.corr=FALSE, cl.pos="n")
+
+#@
+scores_m_scale = scale(scores_m)
+#*
+df_m = df[df$gender == "Man", ]
+#~
+#@
+aggregate(-scores_m_scale, list(df_m$d_drugs), mean)
+
+#@
+#~
+#!
+c_scores_m = cor(scores_m)
+#@
+corrplot(c_scores_m, type="lower")
+```
+-->
+
+#### results
+Skim through
+
+    @ |///||///||///||///|
+    ! |///||///||//
+    ~ |///||///||///||///||///||//
+    * |///||///||///||
+
+Section times
+
+    0:15
+    2:45
+    1:24
+    2:47
+    1:58 + 22:54
+    1:48
+    5:14
+    9:00 + half hour probably rewriting
+    14:24
+    16:00
+
+#### conclusions
+More unique transformations and points of confusion than expected. Everything Andrew does is so... particular to the exact data he's working on.
+
+I find I am absolutely uninterested in this dataset, or at least in the way that Andrew is interacting with it.
+
+#### sanity-check
+
+#### followup

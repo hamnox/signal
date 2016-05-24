@@ -2,7 +2,6 @@
 title: "Data Science Work"
 author: "Melanie Heisey"
 date: "May 2016"
-runtime: shiny
 output: html_document
 ---
 
@@ -129,6 +128,29 @@ get_log_caret_fits = function(dataframe, resultscolname, folds=5, repeats=1,
   
   return(list(model = caret_fit$finalModel,
               predictions = predictions))
+}
+
+
+my_dummy = function(factor_v, prefix="") {
+  results = matrix(NA_integer_, nrow = length(factor_v), ncol=length(levels(factor_v)))
+  for (i in seq(levels(factor_v))) {
+    results[,i] = as.numeric(factor_v == levels(factor_v)[i])
+  }
+  
+  results[is.na(factor_v)]
+  colnames(results) = paste(prefix, levels(factor_v), sep="")
+  return(results)
+}
+
+give_me_dummies = function(df, factcols = NULL) {
+  if (!is.null(factcols)) {
+    newcols = sapply(factcols, function(col) { 
+      dummies = my_dummy(df[[col]])
+    })
+    newcols = do.call(cbind.data.frame, newcols)
+    df = select(df, -one_of(factcols)) %>% cbind.data.frame(newcols)
+  }
+  return (df)
 }
 
 ```
