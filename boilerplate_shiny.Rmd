@@ -136,9 +136,17 @@ my_dummy = function(factor_v, prefix="") {
   for (i in seq(levels(factor_v))) {
     results[,i] = as.numeric(factor_v == levels(factor_v)[i])
   }
-  
   results[is.na(factor_v)]
   colnames(results) = paste(prefix, levels(factor_v), sep="")
+  return(results)
+}
+
+my_dummy_sansone = function(factor_v, prefix="") {
+  results = matrix(NA_integer_, nrow = length(factor_v), ncol=length(levels(factor_v))-1)
+  for (i in seq(levels(factor_v)[-2])) {
+    results[,i] = as.numeric(factor_v == levels(factor_v)[i])
+  }
+  colnames(results) = paste(prefix, levels(factor_v)[-2], sep="")
   return(results)
 }
 

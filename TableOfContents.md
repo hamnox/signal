@@ -1,6 +1,8 @@
 ### compile list of theoretical reading material
 - [R and introductory statistics](http://math.arizona.edu/~ghystad/tutorial.html), In particular pointed they pointed out [The Normal Distribution](http://math.arizona.edu/~ghystad/chapter3.pdf)
 - [Why stepwise regression is bad](https://github.com/signaldatascience/R-curriculum/blob/master/pdfs/week2/day2/stepwise-bad.pdf)
+- Intro to Statistical Learning ([Dropbox](https://www.dropbox.com/home) May24)
+- Applied Predictive Modeling ([Dropbox](https://www.dropbox.com/home))
 
 ### pdfs paired with examples
 - [Linear Regression](https://github.com/signaldatascience/R-curriculum/blob/master/pdfs/week1/day1/linreg-undata.pdf)
