@@ -7,6 +7,9 @@ library(corrplot)
 library(rpart)
 # library(rattle)
 library(randomForest)
+library(earth)
+library(Cubist)
+library(caretEnsemble)
 
 # load data
 red_df = read.csv("datasets/winequality-red.csv", sep=";")
@@ -127,3 +130,118 @@ qplot(y=gbm_fit$cv.error, x=seq(5000))
 # how much does it overfit? time to find out
 gbm_preds = predict(gbm_fit, select(white_df, -quality))
 RMSE(gbm_preds, white_df$quality) # 0.5312718, so you can see some overfit
+
+
+# Non-proprietary MARS
+control = trainControl(method="repeatedcv", repeats=1, number=3,
+                       verboseIter=TRUE)
+mars_hype = train(select(white_df, -quality), white_df$quality,
+                  trControl=control, method="earth",
+                  tuneGrid = expand.grid(degree=1:5,
+                                         nprune=10:20))
+# Fitting nprune = 19, degree = 3 on full training set
+mars_preds = predict(mars_hype$finalModel)
+RMSE(mars_preds, white_df$quality) # 0.7014703 sucks
+actual_earth = earth(quality ~ ., degree=3, nprune=19, data=white_df)
+print(actual_earth)
+summary(actual_earth)
+
+qplot(white_df$quality, mars_preds)
+
+# h = function(v) { max(0, 0.27-v)}
+
+
+# Non-proprietary Cubist
+cubist_hype = train(select(white_df, -quality), white_df$quality,
+                    trControl=control, method="cubist",
+                    tuneGrid = expand.grid(committees=seq(10,30,5),
+                                           neighbors=0:9))
+
+# Fitting committees = 30, neighbors = 6 on full training set
+cubist_preds = predict(cubist_hype$finalModel, white_df, neighbors=6)
+RMSE(cubist_preds, white_df$quality) # 0.4233416
+min(cubist_hype$results$RMSE) # 0.6732227
+
+# aaahhh can't be used for classification :(
+
+# Stacking
+ensemble_methods = c("glmnet", "kknn", "rpart")
+ensemble_control = trainControl(method="repeatedcv", repeats=1,
+                                number=3, verboseIter = TRUE,
+                                savePredictions = "final")
+ensemble_tunes = list(
+  glmnet=caretModelSpec(method="glmnet", tuneLength=10),
+  kknn=caretModelSpec(method="kknn", tuneLength=10),
+  rpart=caretModelSpec(method="rpart", tuneLength=10)
+)
+
+ensemble_fits = caretList(quality ~ ., white_df,
+                            trControl=ensemble_control,
+                             methodList=ensemble_methods,
+                             tuneList=ensemble_tunes)
+
+fit_ensemble = caretEnsemble(ensemble_fits)
+print(fit_ensemble)
+summary(fit_ensemble)
+
+# BEFORE ADDING GRADIENT BOOST
+# The following models were ensembled: glmnet, kknn, rpart, glmnet.1, kknn.1, rpart.1 
+# They were weighted: 
+#   -0.5622 -0.3375 -0.5549 0.303 0.63 1.1463 -0.0943
+# The resulting RMSE is: 0.6713
+# The fit for each individual model on the RMSE is: 
+#   method      RMSE      RMSESD
+# glmnet 0.7531562 0.007753975
+# kknn 0.6900136 0.005625101
+# rpart 0.7440163 0.005170520
+# glmnet.1 0.7531284 0.007730647
+# kknn.1 0.6915205 0.006009126
+# rpart.1 0.7821552 0.007683435
+
+# Stacking, redux
+ensemble_methods = c("glmnet", "kknn", "rpart", "gbm")
+ensemble_control = trainControl(method="repeatedcv", repeats=1,
+                                number=3, verboseIter = TRUE,
+                                savePredictions = "final")
+ensemble_tunes = list(
+  glmnet=caretModelSpec(method="glmnet", tuneLength=10),
+  kknn=caretModelSpec(method="kknn", tuneLength=10),
+  rpart=caretModelSpec(method="rpart", tuneLength=10),
+  gbm=caretModelSpec(method="gbm", tuneGrid=expand.grid(n.trees=500,
+                                                        shrinkage=10^seq(-3, 0, 1),
+                                                        interaction.depth=seq(3),
+                                                        n.minobsinnode=seq(10, 50, 10)))
+)
+
+ensemble_fits = caretList(quality ~ ., white_df,
+                          trControl=ensemble_control,
+                          methodList=ensemble_methods,
+                          tuneList=ensemble_tunes)
+
+fit_ensemble = caretEnsemble(ensemble_fits)
+print(fit_ensemble)
+summary(fit_ensemble)
+# The following models were ensembled: glmnet, kknn, rpart, gbm, glmnet.1, kknn.1, rpart.1, gbm.1 
+# They were weighted: 
+#   -0.0428 1.3086 -1.4738 0.0717 0.4409 -1.2883 1.8327 -0.1027 0.2166
+# The resulting RMSE is: 0.6563
+# The fit for each individual model on the RMSE is: 
+#   method      RMSE      RMSESD
+# glmnet 0.7533464 0.013615293
+# kknn 0.6917053 0.012189862
+# rpart 0.7460467 0.008810107
+# gbm 0.6828631 0.009009401
+# glmnet.1 0.7532886 0.013188679
+# kknn.1 0.6933058 0.011361976
+# rpart.1 0.7826660 0.023430119
+# gbm.1 0.6937775 0.006752477
+
+# CARET STACK
+gbm_ensemble = caretStack(ensemble_fits, method="gbm", tuneLength=10)
+gbm_ens_preds = predict(gbm_ensemble, white_df)
+RMSE(gbm_ens_preds, white_df$quality) # 0.5115175
+
+# quite good, quite good
+print(gbm_ensemble)
+summary(gbm_ensemble)
+qplot(white_df$quality, gbm_ens_preds - white_df$quality)
