@@ -73,8 +73,14 @@ ensemble_tunes = list(
   
 )
 
+load("kaggle_ensemble.Rdata")
+# ensemble_fits = caretList(count ~ ., df,
+#                           trControl=ensemble_control,
+#                           methodList=ensemble_methods,
+#                           tuneList=ensemble_tunes)
 
-ensemble_fits = caretList(count ~ ., df,
-                          trControl=ensemble_control,
-                          methodList=ensemble_methods,
-                          tuneList=ensemble_tunes)
+rf_ensemble = caretStack(ensemble_fits, method="rf", tuneLength=10)
+rf_ens_preds = predict(rf_ensemble, white_df)
+RMSE(rf_ens_preds, df$count)
+
+# save(ensemble_fits, file="kaggle_ensemble.Rdata")

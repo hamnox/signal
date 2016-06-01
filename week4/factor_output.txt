@@ -1,0 +1,195 @@
+Pact, Twig, Synthesis, Ra, My Little Pony, Significant Digits, Three Worlds Collide
+$MR6
+      results                  
+ [1,] "StoriesRead.8."  "0.886"
+ [2,] "StoriesRead.9."  "0.862"
+ [3,] "StoriesRead.7."  "0.731"
+ [4,] "StoriesRead2.1." "0.505"
+ [5,] "StoriesRead2.2." "0.344"
+ [6,] "StoriesRead.2."  "0.343"
+ [7,] "StoriesRead.3."  "0.331"
+ [8,] "StoriesRead2.3." "0.299"
+ [9,] "StoriesRead.1."  "0.294"
+[10,] "StoriesRead.4."  "0.213"
+
+$MR8
+      results                       
+ [1,] "EACommunity"          "0.614"
+ [2,] "BlogsRead2.4."        "0.544"
+ [3,] "EAIdentity"           "0.522"
+ [4,] "ActiveMemberships.9." "0.485"
+ [5,] "EADonations"          "0.449"
+ [6,] "BlogsRead.4."         "0.443"
+ [7,] "BlogsRead.7."         "0.382"
+ [8,] "BlogsRead.5."         "0.37" 
+ [9,] "BlogsRead.6."         "0.36" 
+[10,] "ActiveMemberships.7." "0.336"
+
+$MR9
+      results                   
+ [1,] "StoriesRead2.9." "0.705" 
+ [2,] "StoriesRead2.5." "0.692" 
+ [3,] "StoriesRead2.8." "0.688" 
+ [4,] "StoriesRead2.6." "0.655" 
+ [5,] "WorkStatus.1."   "-0.432"
+ [6,] "StoriesRead2.7." "0.381" 
+ [7,] "StoriesRead.5."  "0.326" 
+ [8,] "StoriesRead2.4." "0.312" 
+ [9,] "WorkStatus.6."   "0.299" 
+[10,] "Married"         "0.251" 
+
+$MR3
+      results                            
+ [1,] "ProbabilityQuestions.9."  "0.593" 
+ [2,] "ProbabilityQuestions.8."  "0.543" 
+ [3,] "ProbabilityQuestions.2."  "0.422" 
+ [4,] "MIRIMission"              "0.421" 
+ [5,] "ProbabilityQuestions.10." "0.348" 
+ [6,] "MIRIEffectiveness"        "0.325" 
+ [7,] "MIRIJob"                  "0.323" 
+ [8,] "ProbabilityQuestions.12." "-0.295"
+ [9,] "StoriesRead2.2."          "0.292" 
+[10,] "WorkStatus.9."            "0.276" 
+
+$MR4
+      results                        
+ [1,] "BlogsRead2.3."        "0.759" 
+ [2,] "ActiveMemberships.6." "0.731" 
+ [3,] "BlogsRead2.5."        "0.69"  
+ [4,] "BlogsRead.1."         "-0.371"
+ [5,] "MIRIEffectiveness"    "-0.314"
+ [6,] "BlogsRead2.7."        "0.298" 
+ [7,] "ASD"                  "0.294" 
+ [8,] "MIRIMission"          "-0.249"
+ [9,] "AnxietyDisorder"      "0.242" 
+[10,] "ActiveMemberships.1." "-0.222"
+
+$MR10
+      results                         
+ [1,] "CommunityIssuesNow.15." "0.518"
+ [2,] "CommunityIssuesNow.14." "0.512"
+ [3,] "CommunityIssuesNow.12." "0.482"
+ [4,] "PhilosophyIssuesNow.5." "0.375"
+ [5,] "PhilosophyIssuesNow.1." "0.363"
+ [6,] "CommunityIssuesNow.10." "0.339"
+ [7,] "CommunityIssuesNow.13." "0.328"
+ [8,] "PhilosophyIssuesNow.2." "0.31" 
+ [9,] "CommunityIssuesNow.7."  "0.308"
+[10,] "CommunityIssuesNow.17." "0.291"
+
+$MR12
+      results                       
+ [1,] "BlogsRead2.8."        "0.595"
+ [2,] "BlogsRead2.9."        "0.558"
+ [3,] "BlogsRead2.1."        "0.546"
+ [4,] "BlogsRead2.7."        "0.499"
+ [5,] "BlogsRead2.6."        "0.493"
+ [6,] "BlogsRead2.2."        "0.364"
+ [7,] "BlogsRead.9."         "0.34" 
+ [8,] "BlogsRead.7."         "0.334"
+ [9,] "BlogsRead.8."         "0.316"
+[10,] "ActiveMemberships.8." "0.26" 
+
+$MR7
+      results                            
+ [1,] "SocialJustice.SQ001."     "0.799" 
+ [2,] "Feminism.SQ001."          "0.789" 
+ [3,] "ProbabilityQuestions.11." "0.452" 
+ [4,] "HumanBiodiversity.SQ001." "-0.449"
+ [5,] "BasicIncome.SQ001."       "0.41"  
+ [6,] "EndOfWorkConcerns.3."     "0.342" 
+ [7,] "AbortionLaws.SQ001."      "0.235" 
+ [8,] "EndOfWorkConcerns.1."     "-0.218"
+ [9,] "BlogsRead2.9."            "-0.209"
+[10,] "IQAge"                    "-0.18" 
+
+$MR5
+      results                           
+ [1,] "ProbabilityQuestions.5." "0.9"   
+ [2,] "ProbabilityQuestions.6." "0.847" 
+ [3,] "ProbabilityQuestions.7." "0.835" 
+ [4,] "ModifyOffspring"         "-0.178"
+ [5,] "EndOfWork"               "-0.134"
+ [6,] "Married"                 "0.123" 
+ [7,] "IQAge"                   "-0.117"
+ [8,] "PoliticalInterest"       "0.098" 
+ [9,] "BlogsRead.8."            "-0.095"
+[10,] "BasicIncome.SQ001."      "-0.095"
+
+$MR15
+      results                         
+ [1,] "BlogsRead.2."          "0.419" 
+ [2,] "CommunityIssuesNow.2." "0.403" 
+ [3,] "ActiveMemberships.5."  "0.393" 
+ [4,] "PreviousSurvey"        "0.383" 
+ [5,] "BlogsRead.8."          "0.324" 
+ [6,] "BlogsRead.3."          "0.296" 
+ [7,] "CommunityIssuesNow.1." "0.294" 
+ [8,] "StoriesRead.6."        "-0.245"
+ [9,] "StoriesRead.3."        "0.231" 
+[10,] "ActiveMemberships.14." "0.224" 
+
+$MR13
+      results                         
+ [1,] "CommunityIssuesNow.5."  "0.327"
+ [2,] "WorkStatus.3."          "0.292"
+ [3,] "BlogsRead.5."           "0.29" 
+ [4,] "CommunityIssuesNow.16." "0.284"
+ [5,] "MinimumWage.SQ001."     "0.281"
+ [6,] "CommunityIssuesNow.11." "0.27" 
+ [7,] "ActiveMemberships.1."   "0.256"
+ [8,] "ADHD"                   "-0.25"
+ [9,] "SingularityHealth"      "0.242"
+[10,] "BPD"                    "-0.24"
+
+$MR1
+      results                          
+ [1,] "SAT2"                   "0.994" 
+ [2,] "SAT"                    "0.762" 
+ [3,] "UnemploymentYear"       "-0.198"
+ [4,] "IQ"                     "0.195" 
+ [5,] "WorkStatus.8."          "-0.162"
+ [6,] "SingularityYear"        "-0.152"
+ [7,] "CommunityIssuesNow.19." "-0.148"
+ [8,] "SuccessorCommunity.2."  "-0.146"
+ [9,] "LudditeFallacy"         "-0.141"
+[10,] "EndOfWork"              "0.134" 
+
+$MR2
+      results                         
+ [1,] "ACT"                   "0.934" 
+ [2,] "IQ"                    "0.325" 
+ [3,] "SAT"                   "0.275" 
+ [4,] "IQAge"                 "-0.263"
+ [5,] "Asexuality"            "0.244" 
+ [6,] "StoriesRead.6."        "-0.212"
+ [7,] "CommunityIssuesNow.9." "-0.203"
+ [8,] "UnemploymentYear"      "0.201" 
+ [9,] "ADHD"                  "-0.197"
+[10,] "MIRIEffectiveness"     "-0.188"
+
+$MR14
+      results                          
+ [1,] "ActiveMemberships.20."   "0.653"
+ [2,] "ActiveMemberships.19."   "0.59" 
+ [3,] "ActiveMemberships.21."   "0.548"
+ [4,] "StoriesRead.2."          "0.313"
+ [5,] "ActiveMemberships.5."    "0.265"
+ [6,] "PoliticalInterest"       "0.193"
+ [7,] "ProbabilityQuestions.3." "0.171"
+ [8,] "ActiveMemberships.14."   "0.17" 
+ [9,] "WorkStatus.1."           "0.151"
+[10,] "ActiveMemberships.8."    "0.15" 
+
+$MR11
+      results                       
+ [1,] "SubstanceUseWorry"    "0.7"  
+ [2,] "SubstanceUseWonder"   "0.676"
+ [3,] "SubstanceUseDisorder" "0.675"
+ [4,] "AnxietyDisorder"      "0.167"
+ [5,] "BipolarDisorder"      "0.152"
+ [6,] "Schizophrenia"        "0.127"
+ [7,] "ADHD"                 "0.104"
+ [8,] "BPD"                  "0.102"
+ [9,] "Taxes.SQ001."         "0.099"
+[10,] "MinimumWage.SQ001."   "0.092"
