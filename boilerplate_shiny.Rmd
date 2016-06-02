@@ -66,6 +66,9 @@ library("corrplot")
 library("pROC")
 # library("GGally")
 
+# R Linter
+# library("lintr")
+
 ```
 
 

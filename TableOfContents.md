@@ -3,6 +3,7 @@
 - [Why stepwise regression is bad](https://github.com/signaldatascience/R-curriculum/blob/master/pdfs/week2/day2/stepwise-bad.pdf)
 - Intro to Statistical Learning ([Dropbox](https://www.dropbox.com/home) May24)
 - Applied Predictive Modeling ([Dropbox](https://www.dropbox.com/home))
+- [A Few Useful Things about Machine Learning](http://homes.cs.washington.edu/~pedrod/papers/cacm12.pdf)
 
 ### pdfs paired with examples
 - [Linear Regression](https://github.com/signaldatascience/R-curriculum/blob/master/pdfs/week1/day1/linreg-undata.pdf)
